@@ -31,6 +31,7 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 LEADS = os.path.join(ROOT, "leads")
 PUSH = os.path.join(LEADS, "_push")
 BJ = os.path.join(LEADS, "board.json")
+WORK_KEEP = ("pieces", "q", "status", "memo", "sentAt", "updated", "total", "option", "quote")  # as sync.py KEEP
 ME_FILES = ("business.md", "prices.md", "voice.md")
 FACT_KEYS = ("customer", "address", "phone", "wants", "home", "drive", "lot", "walls", "quote_no", "created", "notes", "inbox")
 
@@ -111,6 +112,10 @@ def restore(d, board):
         if not os.path.exists(os.path.join(folder, "facts.json")):
             os.makedirs(os.path.join(folder, "photos"), exist_ok=True)
             json.dump({k: r[k] for k in FACT_KEYS if r.get(k) is not None}, open(os.path.join(folder, "facts.json"), "w"), indent=1)
+    for lid, s in newest(d, "work").items():  # his taps so far, so the next sync reports only what's new
+        sp = os.path.join(LEADS, lid, "state.json")
+        if os.path.isdir(os.path.dirname(sp)) and not os.path.exists(sp):
+            json.dump({k: s[k] for k in WORK_KEEP if k in s}, open(sp, "w"), indent=1)
     board["pushed"] = sorted(set(board.get("pushed", [])) | {f"biz/{i}" for i in biz} | {f"leads/{i}" for i in leads})
     shutil.rmtree(d, ignore_errors=True)
     print(f"restored: {'his settings' if biz else 'NO SETTINGS ON THE BOARD (run setup)'} · {len(by_lead)} lead(s)")

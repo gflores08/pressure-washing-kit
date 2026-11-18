@@ -23,7 +23,7 @@ except ImportError:
         print("pillow: COULD NOT INSTALL. Run: " + sys.executable + " -m pip install --user pillow\n" + r.stderr[-400:])
 for name, url in (("address lookup (US Census)", "https://geocoding.geo.census.gov/geocoder/locations/onelineaddress?address=1600+Pennsylvania+Ave+NW+Washington+DC&benchmark=Public_AR_Current&format=json"),
                   ("satellite photos (Esri)", "https://services.arcgisonline.com/arcgis/rest/services/World_Imagery/MapServer?f=json"),
-                  ("drive times (OSRM)", "https://router.project-osrm.org/route/v1/driving/-121.49,38.58;-121.47,38.59?overview=false")):
+                  ("drive times (OSRM)", "https://router.project-osrm.org/route/v1/driving/-77.0365,38.8977;-77.0090,38.8899?overview=false")):
     try:
         urllib.request.urlopen(urllib.request.Request(url, headers={"User-Agent": "lead-report-tool"}), timeout=20).read(200)
         print(f"{name}: ok")

@@ -88,7 +88,7 @@ def file_work(lid, s, today):
 
 def file_inbox(iid, s, today):
     taken = {json.load(open(p)).get("inbox") for p in glob.glob(os.path.join(LEADS, "**", "facts.json"), recursive=True)}
-    if iid in taken or not s.get("customer"):
+    if iid in taken or not s.get("customer") or s.get("failed"):
         return False
     last = re.sub(r"[^a-z0-9]+", "-", (s["customer"].split() or ["lead"])[-1].lower()).strip("-") or "lead"
     num = (re.findall(r"\d+", s.get("address") or "") or [iid[-4:]])[0]

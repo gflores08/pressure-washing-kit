@@ -22,7 +22,13 @@ The board is one page in his Claude account: `tools/board-template.html`, publis
 ## The lead check (setup makes it once)
 A scheduled task (create_trigger) at 7am, 10am, 1pm, 4pm and 7pm his time (`0 7,10,13,16,19 * * *`, shifted to UTC if the tool wants UTC; Pro plans allow about 5 scheduled runs a day), this session's cloud environment, named "Lead board check", then set its model to Haiku (an update right after; create has no model setting). The prompt (put his board link in):
 
-> Lead board check for <board link>. ArtifactData `list` collection `inbox` of that board, then collection `leads`. If every inbox row's id already appears as the `inbox` field of a lead, stop and say nothing. Otherwise: `git clone https://github.com/gflores08/pressure-washing-kit kit && cd kit`, read `CLAUDE.md`, do the board skill § Start with that link, then § Sync, and finish every NEW FROM THE PHONE with the lead skill. Keep it short.
+> Lead board check for <board link>. If Gmail is connected: search his email from the last day for new customer inquiries (pressure washing, quote, estimate, driveway; Facebook, Nextdoor, Thumbtack, Angi or Google notifications, or a direct email), and for each new one write an `inbox` row on the board (customer, phone, address, wants, at, `source`: the email's id) unless an inbox row already has that `source`. Then ArtifactData `list` collection `inbox` of that board, then collection `leads`. If every inbox row's id already appears as the `inbox` field of a lead, stop and say nothing. Otherwise: `git clone https://github.com/gflores08/pressure-washing-kit kit && cd kit`, read `CLAUDE.md`, do the board skill § Start with that link, then § Sync, and finish every NEW FROM THE PHONE with the lead skill. Keep it short.
+
+## Gmail and Calendar (when connected; the chat had them when it started)
+- **Lead emails:** the lead check finds them (above). He forwards or pastes one → the lead skill.
+- **A quote to send by email:** after the quote skill, make a Gmail **draft** to the customer with `email.txt` as the body (attach the PDF if the tool allows). He reviews and sends. Never send it yourself.
+- **Booked** ("Dana's booked Thursday 9am"): mark the lead `won` (below), then a Google Calendar event: title "<customer>: <what> ($<total>)", the address as the location, his phone notes and the customer's phone in the description, length from the board's time on site (or 2 hours).
+- Not connected and he asks → the one line from the setup skill, step 8.
 
 ## Mark a status ("mark Dana won")
 Sync first (steps 1 and 2), then `python3 tools/sync.py --mark <folder> <new|traced|sent|won|done|paid|lost>`. It files it and prints the one ArtifactData call that tells the board; use the version the `work` list showed for that lead.

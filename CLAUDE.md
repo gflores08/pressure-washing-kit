@@ -16,12 +16,14 @@ Cloud sessions start empty, so the folder forgets between sessions; the board do
 | "lead", pastes a lead, forwards a lead email | `.claude/skills/lead/SKILL.md` |
 | "sync", "update the board", "mark Dana won", "how are my leads", the lead check | `.claude/skills/board/SKILL.md` |
 | "quote", "make the PDF for Dana" | `.claude/skills/quote/SKILL.md` |
+| "Dana's booked Thursday", lead emails, "draft the email to Dana" | `.claude/skills/board/SKILL.md` § Gmail and Calendar |
 
 ## What's here
 
 ```
 CLAUDE.md          this map
 README.md          for him: the message to paste, and what happens
+AGENTS.md          for any other AI agent: read this file
 me/                his facts: business.md · prices.md · voice.md (how he talks) · logo.png. Saved on his board too.
 tools/             scripts for anything with one right answer (each says how to use it at the top)
   doctor.py        can this session run the tools and reach the maps? fixes what it can

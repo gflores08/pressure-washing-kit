@@ -8,7 +8,7 @@ A back office for a pressure washing business, run by Claude from your phone.
 2. Paste this and send it:
 
 ```
-Set up my pressure washing office. Get the kit: git clone https://github.com/gflores08/pressure-washing-kit then go into that folder and follow its CLAUDE.md. I'm saying: set me up.
+Set up my pressure washing office. Get the kit: git clone https://github.com/gflores08/pressure-washing-kit then go into that folder and follow its CLAUDE.md. I'm saying: set me up, and yes, schedule the lead check on my board 5 times a day.
 ```
 
 3. Talk for five minutes about your business when Claude asks.

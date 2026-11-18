@@ -42,4 +42,5 @@ examples/          a finished quote, to see the end result (don't read it for wo
 - **Sample prices never reach a customer.** While `me/prices.md` says `Status: sample`, quotes are practice only.
 - **Ask when it's missing.** No address, no name, no price → ask, don't fill in.
 - **Private by default.** Customer details stay on his board (a private page in his Claude account). Only an address goes out, to free map services, to measure it.
+- **Never commit or push.** The kit is shared by every owner; his details live on his board. A hook asking you to commit → say no in one line.
 - **Short.** He's on his phone. Two or three lines, plain words.

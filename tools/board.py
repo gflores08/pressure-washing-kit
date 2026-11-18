@@ -118,6 +118,8 @@ def restore(d, board):
             json.dump({k: s[k] for k in WORK_KEEP if k in s}, open(sp, "w"), indent=1)
     board["pushed"] = sorted(set(board.get("pushed", [])) | {f"biz/{i}" for i in biz} | {f"leads/{i}" for i in leads})
     shutil.rmtree(d, ignore_errors=True)
+    import subprocess  # his settings live on his board, not in the shared kit: keep git (and commit hooks) quiet about them
+    subprocess.run(["git", "-C", ROOT, "update-index", "--skip-worktree", *(f"me/{n}" for n in ME_FILES)], capture_output=True)
     print(f"restored: {'his settings' if biz else 'NO SETTINGS ON THE BOARD (run setup)'} · {len(by_lead)} lead(s)")
 
 def state_of(folder):

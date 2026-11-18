@@ -467,7 +467,7 @@
       <div class="opts" id="opts"></div>
       <button class="primary" id="open-client">See the customer's quote</button>
       <button class="claude" id="copy-claude"><svg class="spark" viewBox="0 0 24 24" aria-hidden="true"><g stroke="#D97757" stroke-width="2.4" stroke-linecap="round"><path d="M12 12 L12 3" transform="rotate(0 12 12)"/><path d="M12 12 L12 5" transform="rotate(30 12 12)"/><path d="M12 12 L12 3" transform="rotate(60 12 12)"/><path d="M12 12 L12 5" transform="rotate(90 12 12)"/><path d="M12 12 L12 3" transform="rotate(120 12 12)"/><path d="M12 12 L12 5" transform="rotate(150 12 12)"/><path d="M12 12 L12 3" transform="rotate(180 12 12)"/><path d="M12 12 L12 5" transform="rotate(210 12 12)"/><path d="M12 12 L12 3" transform="rotate(240 12 12)"/><path d="M12 12 L12 5" transform="rotate(270 12 12)"/><path d="M12 12 L12 3" transform="rotate(300 12 12)"/><path d="M12 12 L12 5" transform="rotate(330 12 12)"/></g></svg><span><b id="cc-label">Save with Claude</b><small>Copies your work so Claude can file it. Not sent to the customer.</small></span></button>
-      <p class="cap" id="saved-note">Saved to your board. Claude files it when you say "sync".</p>
+      <p class="cap" id="saved-note">Saved to your board.</p>
       <details class="more" id="more">
         <summary>Change sq ft and extras</summary>
         <h2>Square feet</h2>
@@ -513,7 +513,7 @@
     <a class="gbtn" id="ib-call">Call</a><a class="gbtn" id="ib-text">Text</a>
     <a class="gbtn" id="ib-map" target="_blank" rel="noopener">Directions</a><button class="gbtn del" id="ib-remove">Remove</button>
   </div>
-  <p class="cap">Say "sync" to Claude at your computer and it looks up the house and photos.</p>
+  <p class="cap">Claude looks up the house and photos at its next check.</p>
   <button class="quiet" data-close>Close</button>
 </div>
 
@@ -926,8 +926,8 @@ function emailBody(p) {
 }
 // The email for this quote: his edit or Claude's voiced draft if it's for these numbers, else the plain one
 function emailFor() { const k = docKey(); return q.email && q.email.key === k ? q.email : { key: k, subject: emailSubject(), body: emailBody(plainParts()), voiced: false }; }
-let SAMPLE = null, DL = null, COMMENTS = null;
-if (window.claude && claude.use) { claude.use('sample').then(f => SAMPLE = f, () => {}); claude.use('downloads').then(d => DL = d, () => {}); claude.use('comments').then(c => COMMENTS = c, () => {}); }
+let SAMPLE = null, DL = null;
+if (window.claude && claude.use) { claude.use('sample').then(f => SAMPLE = f, () => {}); claude.use('downloads').then(d => DL = d, () => {}); }
 async function voiceEmail() {
   const k = docKey(), cur = q.email && q.email.key === k ? q.email : null, id = curId;
   if (!SAMPLE || (cur && (cur.voiced || cur.edited))) return;
@@ -969,7 +969,7 @@ function buildPdf() {
     const blob = pdf.output('blob');
     if (PDF.key === k) { PDF.blob = blob; PDF.busy = null; $('att-state').textContent = `PDF · ${Math.max(1, Math.round(blob.size / 1024))} KB · attached`; }
     return blob;
-  })().catch(e => { if (PDF.key === k) { PDF.key = null; PDF.busy = null; $('att-state').textContent = 'The PDF could not be made here. Claude makes it on "sync".'; } return null; });
+  })().catch(e => { if (PDF.key === k) { PDF.key = null; PDF.busy = null; $('att-state').textContent = 'The PDF could not be made here. Ask Claude for the quote PDF.'; } return null; });
   return PDF.busy;
 }
 function renderPdf() {
@@ -1237,7 +1237,7 @@ function renderBoard() {
   }
   $('cards').replaceChildren(...cards);
 }
-// A lead he typed on the phone: call or text now; Claude looks up the house on "sync".
+// A lead he typed on the phone: call or text now; the next lead check looks up the house.
 let inboxOpen = null;
 function openInbox(it) {
   inboxOpen = it; $('ib-name').textContent = it.customer || 'New lead'; $('ib-addr').textContent = [it.address, it.wants].filter(Boolean).join(' · ');
@@ -1252,19 +1252,16 @@ $('ib-remove').onclick = async () => {
   try { await DB.doc('inbox/' + it._id).delete(); } catch (e) { toast('Could not remove it. Check your signal.'); return; }
   toast(`${it.customer || 'Lead'} removed`, async () => { const { _id, ...data } = it; try { await DB.doc('inbox/' + _id).set(data); } catch (e) {} });
 };
-// New lead from the phone: four boxes, saved to the board's inbox. Claude finishes it on "sync".
+// New lead from the phone: four boxes, saved to the board's inbox. The next lead check finishes it.
 $('add-lead').onclick = () => { $('nl-form').reset(); $('nl-err').hidden = true; openSheetEl('nl-sheet'); setTimeout(() => $('nl-name').focus(), 50); };
 $('nl-form').onsubmit = async e => {
   e.preventDefault(); if (busy() || !DB) return;
   const v = k => $('nl-' + k).value.trim().slice(0, 200);
   if (!v('name') || !(v('phone') || v('address'))) { $('nl-err').hidden = false; return; }
   const row = { customer: v('name'), phone: v('phone'), address: v('address'), wants: v('wants'), at: new Date().toISOString() };
-  // Hand it to a Claude session watching this board (his computer, "watch" + the board link): it looks the house up by itself
-  const msg = `New lead from the board: ${row.customer}${row.phone ? ' · ' + row.phone : ''}${row.address ? ' · ' + row.address : ''}${row.wants ? ' · wants ' + row.wants : ''}. Look it up and put it on the board.`;
-  const sent = COMMENTS ? COMMENTS.canSendToClaude().then(st => st === 'available' ? COMMENTS.anchorFor($('add-lead')).then(a => COMMENTS.sendToClaude({ anchor: a, text: msg })) : null).catch(() => null) : Promise.resolve(null);
   closeSheetEl();
-  try { await DB.collection('inbox').add(row); toast((await sent) ? `${row.customer} added. Claude is looking up the house.` : `${row.customer} added. Claude looks up the house on "sync".`); }
-  catch (e) { toast((await sent) ? `${row.customer} sent to Claude. Not saved on the board yet.` : 'Not saved. Check your signal and try again.'); }
+  try { await DB.collection('inbox').add(row); toast(`${row.customer} added. Claude fills in the house at its next check.`); }
+  catch (e) { toast('Not saved. Check your signal and try again.'); }
 };
 document.querySelectorAll('#b-filter button').forEach(b => b.onclick = () => { filter = b.dataset.f;
   document.querySelectorAll('#b-filter button').forEach(t => { t.classList.toggle('on', t === b); t.setAttribute('aria-selected', t === b); }); renderBoard(); });

@@ -8,11 +8,16 @@ database rows, so a new lead never republishes the page.
   python3 tools/board.py --have leads/_have
                                     a send was refused because a row already exists: Claude lists biz, leads and
                                     shots (out_dir leads/_have); this remembers what the board has, then prints the rest
+  python3 tools/board.py --restore leads/_have
+                                    a fresh session (cloud sessions start empty): Claude lists biz and leads (out_dir
+                                    leads/_have); this rebuilds me/ and a small facts.json per lead from them, so
+                                    quote numbers, sync and "already sent" all work again
   python3 tools/board.py --offline  leads/board.html: the whole board in one file, for a computer without
                                     Claude artifacts (taps stay in that browser; "Save with Claude" copies them)
 
 Rows (never edited, only added, so no versions are needed):
-  biz/<hash>         name, phone, prices, minimum, speed, Good package, terms, sample flag, logo (from me/)
+  biz/<hash>         name, phone, prices, minimum, speed, Good package, terms, sample flag, logo, and the me/ files
+                     themselves (the board is his memory: a cloud session rebuilds me/ from the newest biz row)
   leads/<id>~<hash>  one lead's facts, map scale, property line, thumbnail, and its photo rows
   shots/<id>~<hash>~<n>  one aerial photo (a few hundred KB)
 The board shows the newest row per lead. His taps live in work/<id> (written by the page, read by sync.py).
@@ -26,6 +31,7 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 LEADS = os.path.join(ROOT, "leads")
 PUSH = os.path.join(LEADS, "_push")
 BJ = os.path.join(LEADS, "board.json")
+ME_FILES = ("business.md", "prices.md", "voice.md")
 FACT_KEYS = ("customer", "address", "phone", "wants", "home", "drive", "lot", "walls", "quote_no", "created", "notes", "inbox")
 
 def jpeg(path, size, q, limit=None):
@@ -73,8 +79,41 @@ def biz_doc():
            "speed": s["speed"], "good": s["good"], "terms": s["terms"], "sample": s["sample"],
            "logo": jpeg(logo, 160, 85) if os.path.exists(logo) else None, "voice": s["voice"],
            "email_rules": open(os.path.join(ROOT, "tools", "email-rules.md"), encoding="utf-8").read(),
-           "quote_tpl": open(os.path.join(ROOT, "tools", "quote-template.html"), encoding="utf-8").read()}
+           "quote_tpl": open(os.path.join(ROOT, "tools", "quote-template.html"), encoding="utf-8").read(),
+           "me_files": {n: open(os.path.join(ROOT, "me", n), encoding="utf-8").read() for n in ME_FILES if os.path.exists(os.path.join(ROOT, "me", n))}}
     return ("biz", "b-" + h(doc), dict(doc, at=datetime.datetime.now().isoformat(timespec="seconds")))
+
+def newest(d, col):
+    """The rows Claude listed into d/<col>/ (a "~" in an id is saved as "@"), as {id: fields}."""
+    out = {}
+    for p in glob.glob(os.path.join(d, col, "*.json")):
+        r = json.load(open(p)); r = r.get("data", r) if isinstance(r.get("data"), dict) else r
+        out[os.path.basename(p)[:-5].replace("@", "~")] = r
+    return out
+
+def restore(d, board):
+    biz = newest(d, "biz"); leads = newest(d, "leads")
+    if biz:
+        b = max(biz.values(), key=lambda r: r.get("at") or "")
+        os.makedirs(os.path.join(ROOT, "me"), exist_ok=True)
+        for n, text in (b.get("me_files") or {}).items():
+            if n in ME_FILES:
+                open(os.path.join(ROOT, "me", n), "w", encoding="utf-8").write(text)
+        if (b.get("logo") or "").startswith("data:image"):
+            open(os.path.join(ROOT, "me", "logo.png"), "wb").write(base64.b64decode(b["logo"].split(",", 1)[1]))
+    by_lead = {}
+    for rid, r in leads.items():
+        lid = r.get("id") or rid.split("~")[0]
+        if (r.get("at") or "") >= (by_lead.get(lid, {}).get("at") or ""):
+            by_lead[lid] = r
+    for lid, r in by_lead.items():
+        folder = os.path.join(LEADS, lid)
+        if not os.path.exists(os.path.join(folder, "facts.json")):
+            os.makedirs(os.path.join(folder, "photos"), exist_ok=True)
+            json.dump({k: r[k] for k in FACT_KEYS if r.get(k) is not None}, open(os.path.join(folder, "facts.json"), "w"), indent=1)
+    board["pushed"] = sorted(set(board.get("pushed", [])) | {f"biz/{i}" for i in biz} | {f"leads/{i}" for i in leads})
+    shutil.rmtree(d, ignore_errors=True)
+    print(f"restored: {'his settings' if biz else 'NO SETTINGS ON THE BOARD (run setup)'} · {len(by_lead)} lead(s)")
 
 def state_of(folder):
     p = os.path.join(folder, "state.json")
@@ -85,11 +124,15 @@ def main():
     opened = sorted(glob.glob(os.path.join(LEADS, "*", "facts.json")))
     finished = sorted(glob.glob(os.path.join(LEADS, "done", "*", "*", "facts.json")))
     if "--done" in sys.argv:
-        sent = sorted(os.path.relpath(p, PUSH)[:-5] for p in glob.glob(os.path.join(PUSH, "*", "*.json")))
+        sent = sorted(os.path.relpath(p, PUSH)[:-5].replace("@", "~") for p in glob.glob(os.path.join(PUSH, "*", "*.json")))
         board["pushed"] = sorted(set(board.get("pushed", [])) | set(sent))
         json.dump(board, open(BJ, "w"), indent=1)
         shutil.rmtree(PUSH, ignore_errors=True)
         print(f"board: {len(sent)} row(s) marked as sent.")
+        return
+    if "--restore" in sys.argv:
+        restore(sys.argv[sys.argv.index("--restore") + 1], board)
+        json.dump(board, open(BJ, "w"), indent=1)
         return
     if "--have" in sys.argv:
         d = sys.argv[sys.argv.index("--have") + 1]
@@ -115,6 +158,8 @@ def main():
         open(out, "w").write(page)
         print(f"board: {out} · {len(seed['leads'])} lead(s) · {len(page) / 1e6:.1f} MB · open it in any browser")
         return
+    if not settings()["business"]["name"]:
+        sys.exit("No business name in me/. A fresh session restores it first: the board skill, Start. A new owner: the setup skill.")
     docs = [biz_doc()] + [d for fj in opened for d in lead_docs(os.path.dirname(fj))]
     done = set(board.get("pushed", []))
     new = [(c, i, d) for c, i, d in docs if f"{c}/{i}" not in done]
@@ -125,7 +170,7 @@ def main():
     batches, cur, size = [], [], 0
     for c, i, d in new:
         os.makedirs(os.path.join(PUSH, c), exist_ok=True)
-        p = os.path.join(PUSH, c, i + ".json")
+        p = os.path.join(PUSH, c, i.replace("~", "@") + ".json")  # plain file names: a scheduled run refuses odd ones
         body = json.dumps(d); open(p, "w").write(body)
         if cur and (size + len(body) > 900_000 or len(cur) == 50):
             batches.append(cur); cur, size = [], 0

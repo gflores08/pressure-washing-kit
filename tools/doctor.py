@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Checks this computer can run the tools, and fixes what it can.
+"""Checks this session can run the tools and reach the free map services, and fixes what it can.
 
   python3 tools/doctor.py      (on Windows: python tools\\doctor.py)
 
@@ -29,6 +29,6 @@ for name, url in (("address lookup (US Census)", "https://geocoding.geo.census.g
         print(f"{name}: ok")
     except Exception as e:
         ok = ok and "OSRM" in name  # drive times are nice to have
-        print(f"{name}: NOT REACHABLE ({e}). " + ("Leads still work, without drive times." if "OSRM" in name else "This computer can't reach it; leads need it."))
+        print(f"{name}: NOT REACHABLE ({e}). " + ("Leads still work, without drive times." if "OSRM" in name else "This session can't reach it: leads come without photos. Network access → Full fixes it (the setup skill, step 2)."))
 print("\nALL GOOD" if ok else "\nFIX THE LINES ABOVE")
 sys.exit(0 if ok else 1)

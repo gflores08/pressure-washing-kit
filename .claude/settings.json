@@ -1,0 +1,15 @@
+{
+  "model": "haiku",
+  "permissions": {
+    "allow": [
+      "Bash(python3 tools/*)",
+      "Bash(python tools/*)",
+      "WebSearch",
+      "ArtifactData",
+      "ArtifactComments",
+      "Read",
+      "Write(./leads/**)",
+      "Edit(./leads/**)"
+    ]
+  }
+}

@@ -1,0 +1,106 @@
+<!doctype html>
+<!-- The quote's look. tools/quote.py fills every {{FIELD}}. Colors: --brand and --accent. Logo: me/logo.png -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Quote {{QUOTE_NO}} · {{BUSINESS_NAME}}</title>
+<style>
+  :root { --brand:#12305e; --accent:#1696d8; --ink:#1d2433; --muted:#6b7385; --line:#e3e7ee; --soft:#f4f7fb; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:#fff; color:var(--ink); font:14px/1.45 -apple-system, "Segoe UI", Helvetica, Arial, sans-serif; }
+  .page { max-width:800px; margin:0 auto; padding:40px 44px; }
+  header { display:flex; justify-content:space-between; align-items:flex-start; gap:24px; border-bottom:3px solid var(--brand); padding-bottom:18px; }
+  .brand { display:flex; gap:14px; align-items:center; }
+  .brand img { width:84px; height:84px; object-fit:contain; }
+  .brand h1 { margin:0; font-size:20px; color:var(--brand); }
+  .brand p { margin:2px 0 0; color:var(--muted); font-size:12.5px; }
+  .doc { text-align:right; }
+  .doc h2 { margin:0; font-size:26px; letter-spacing:.06em; color:var(--brand); }
+  .doc p { margin:2px 0; color:var(--muted); font-size:12.5px; }
+  .cols { display:grid; grid-template-columns:1fr 1fr; gap:18px; margin:22px 0; }
+  .box { background:var(--soft); border-radius:8px; padding:12px 14px; }
+  .box h3 { margin:0 0 6px; font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--accent); }
+  .box p { margin:1px 0; }
+  table { width:100%; border-collapse:collapse; margin-top:6px; }
+  th { text-align:left; font-size:11px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted); border-bottom:1px solid var(--line); padding:8px 6px; }
+  td { border-bottom:1px solid var(--line); padding:9px 6px; vertical-align:top; }
+  td.num, th.num { text-align:right; white-space:nowrap; }
+  td small { color:var(--muted); }
+  .options { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:12px; margin:22px 0 8px; }
+  .opt { border:1.5px solid var(--line); border-radius:10px; padding:12px; }
+  .opt.pick { border-color:var(--accent); box-shadow:0 0 0 3px rgba(22,150,216,.12); }
+  .opt h4 { margin:0; font-size:12px; text-transform:uppercase; letter-spacing:.08em; color:var(--muted); }
+  .opt .price { font-size:22px; font-weight:700; color:var(--brand); margin:4px 0; }
+  .opt p { margin:0; font-size:12.5px; }
+  .sample { background:#fff4e5; color:#b45309; font-weight:700; text-align:center; padding:8px; border-radius:8px; margin-bottom:16px; }
+  tr.tot td { font-weight:700; font-size:16px; border-bottom:0; }
+  .note { font-size:12px; color:var(--muted); margin:8px 0 0; }
+  .terms { margin-top:22px; font-size:12.5px; }
+  .terms h3, .sign h3 { font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--accent); margin:0 0 6px; }
+  .terms ul { margin:0; padding-left:18px; }
+  .sign { margin-top:26px; display:grid; grid-template-columns:2fr 1fr; gap:24px; }
+  .line { border-bottom:1px solid var(--ink); height:34px; }
+  .sign p { margin:4px 0 0; font-size:11.5px; color:var(--muted); }
+  footer { margin-top:28px; text-align:center; font-size:11.5px; color:var(--muted); }
+  @page { size: letter; margin: 0.4in; }
+  @media print { body { zoom:0.86; } .page { padding:0; } footer { margin-top:16px; } }
+</style>
+</head>
+<body>
+<div class="page">
+  {{SAMPLE}}
+  <header>
+    <div class="brand">
+      {{LOGO}}
+      <div>
+        <h1>{{BUSINESS_NAME}}</h1>
+        <p>{{BUSINESS_CONTACT}}</p>
+      </div>
+    </div>
+    <div class="doc">
+      <h2>QUOTE</h2>
+      <p>No. {{QUOTE_NO}}</p>
+      <p>Date: {{QUOTE_DATE}}</p>
+      <p>Good for 30 days</p>
+    </div>
+  </header>
+
+  <div class="cols">
+    <div class="box">
+      <h3>Prepared for</h3>
+      <p><strong>{{CUSTOMER_NAME}}</strong></p>
+      <p>{{CUSTOMER_PHONE}}</p>
+    </div>
+    <div class="box">
+      <h3>Property</h3>
+      <p>{{PROPERTY_ADDRESS}}</p>
+    </div>
+  </div>
+
+  {{OPTIONS}}
+
+  <h3 style="font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);margin:18px 0 0">{{WORK_TITLE}}</h3>
+  <table>
+    <thead><tr><th>Service</th><th class="num">Area</th><th class="num">Rate</th><th class="num">Amount</th></tr></thead>
+    <tbody>
+      {{LINE_ITEMS}}
+    </tbody>
+  </table>
+  <p class="note">{{PRICE_NOTE}}</p>
+
+  <div class="terms">
+    <h3>Terms</h3>
+    <ul>
+      {{TERMS}}
+    </ul>
+  </div>
+
+  <div class="sign">
+    <div><h3>Approve this quote</h3><div class="line"></div><p>Customer signature{{SIGN_OPTIONS}}</p></div>
+    <div><h3>Date</h3><div class="line"></div></div>
+  </div>
+
+  <footer>Thank you for the chance to quote your home. Questions? {{BUSINESS_PHONE}}</footer>
+</div>
+</body>
+</html>
